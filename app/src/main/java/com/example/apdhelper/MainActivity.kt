@@ -3,45 +3,55 @@ package com.example.apdhelper
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.example.apdhelper.bottomnavigationbar.BottomBar
+import com.example.apdhelper.bottomnavigationbar.NavigationGraph
 import com.example.apdhelper.ui.theme.APDHelperTheme
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
             APDHelperTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val navController = rememberNavController()
+                var isBottomBarVisible by remember { mutableStateOf(false) }
+
+                val auth = FirebaseAuth.getInstance()
+                val currentUser = auth.currentUser
+
+                // Prikazujemo bottom bar samo ako je korisnik u app flow
+                // ili kad je login uspješan (preko onBottomBarVisibilityChanged)
+
+                // Na startu - ako je korisnik prijavljen ide odmah u app flow
+                LaunchedEffect(currentUser) {
+                    if (currentUser != null) {
+                        navController.navigate("home") {
+                            popUpTo("start") { inclusive = true }
+                        }
+                        isBottomBarVisible = true
+                    }
+                }
+
+                androidx.compose.material3.Scaffold(
+                    bottomBar = {
+                        if (isBottomBarVisible) {
+                            BottomBar(navController = navController, state = true)
+                        }
+                    }
+                ) { padding ->
+                    androidx.compose.foundation.layout.Box(modifier = androidx.compose.ui.Modifier.padding(padding)) {
+                        NavigationGraph(
+                            navController = navController,
+                            onBottomBarVisibilityChanged = { visible -> isBottomBarVisible = visible }
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    APDHelperTheme {
-        Greeting("Android")
     }
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "176467122242",
+    "project_id": "apdhelper",
+    "storage_bucket": "apdhelper.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:176467122242:android:1c39c988a66ff880b475db",
+        "android_client_info": {
+          "package_name": "com.example.apdhelper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAm4aV48pAXEHwCaMpJ1y7kKgz9Ubvu28s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
