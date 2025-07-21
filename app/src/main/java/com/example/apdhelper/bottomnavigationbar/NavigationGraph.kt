@@ -38,5 +38,9 @@ fun NavigationGraph(
             ProfileScreen(navController)
         }
 
+        composable("notes") {
+            onBottomBarVisibilityChanged(true)
+            NotesScreen(navController)
+        }
     }
 }

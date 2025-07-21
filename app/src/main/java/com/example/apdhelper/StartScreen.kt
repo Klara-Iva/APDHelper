@@ -1,131 +1,312 @@
 package com.example.apdhelper
 
-import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.apdhelper.ui.theme.Lavander
-import com.example.apdhelper.ui.theme.Purple40
-import com.example.apdhelper.ui.theme.Purple80
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlin.system.exitProcess
+import com.example.apdhelper.ui.theme.*
 
-private const val RC_SIGN_IN = 9001
 
 @Composable
 fun StartScreen(navController: NavController) {
-    val context = LocalContext.current
+
+    val signIn = LocalGoogleSignInLauncher.current
 
     BackHandler {
         exitProcess(0)
     }
 
-    val googleSignInClient = remember {
-        GoogleSignIn.getClient(
-            context,
-            GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(context.getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
-        )
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Lavander)
     ) {
         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
             modifier = Modifier
-
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
         ) {
+            Box(
+                modifier = Modifier
+                    .padding(bottom = 30.dp)
+                    .size(80.dp)
+                    .background(
+                        color = Primary,
+                        shape = RoundedCornerShape(20.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.FavoriteBorder,
+                    contentDescription = "Heart Outline",
+                    tint = IconTintPrimary,
+                    modifier = Modifier.size(50.dp)
+                )
+            }
 
             Text(
-                text = "Dobrodošli!",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                text = "Welcome to APDHelper \uD83C\uDF19",
+                fontSize = 22.sp,
+                color = Primary
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Odaberite način prijave", fontSize = 16.sp, color = Color(0xFFB3A9A1)
+                text = "Your safe haven for managing anxiety and finding inner peace. We're here to support you on your wellness journey. ✨",
+                fontSize = 14.sp,
+                color = TextPrimary,
+                lineHeight = 20.sp,
+                modifier = Modifier
+                    .padding(top = 8.dp, bottom = 32.dp)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                maxLines = 4
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "Let’s get started! 🚀",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Primary,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
 
-            Button(
-                onClick = { navController.navigate("register") },
-                colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                shape = RoundedCornerShape(50),
+            Text(
+                text = "Choose how you'd like to join our supportive community",
+                fontSize = 14.sp,
+                color = TextPrimary,
+                modifier = Modifier.padding(bottom = 11.dp),
+                textAlign = TextAlign.Center,
+            )
+
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(50.dp)
-                    .semantics {
-                        contentDescription = "navigateToRegistrationButton"
-                    }
+                    .fillMaxSize()
+                    .background(
+                        color = Surface,
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .padding(24.dp)
             ) {
-                Text("Kreiraj novi račun", fontSize = 16.sp, color = Color.White)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+
+                    Button(
+                        onClick = {
+                            signIn()
+                        },
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 12.dp
+                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_email_24),
+                                contentDescription = "Email Icon",
+                                tint = Background,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                "Continue with Google ⚡",
+                                fontSize = 15.sp,
+                                color = Background
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Divider(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(1.dp),
+                            color = DividerColor
+                        )
+                        Text(
+                            text = "or",
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            color = TextWhite,
+                            fontSize = 14.sp
+                        )
+                        Divider(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(1.dp),
+                            color = DividerColor
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Button(
+                        onClick = { navController.navigate("login") },
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 12.dp
+                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = Surface),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Secondary,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_person_24),
+                                contentDescription = "person Icon",
+                                tint = Primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                "Sign In to Your Account 🔐",
+                                fontSize = 15.sp,
+                                color = Primary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { navController.navigate("register") },
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 8.dp,
+                            pressedElevation = 12.dp
+                        ),
+                        colors = ButtonDefaults.buttonColors(containerColor = Surface),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Secondary,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_person_add_alt_1_24),
+                                contentDescription = "person add Icon",
+                                tint = TextWhite,
+                                modifier = Modifier.size(20.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text("Create New Account 🌱", fontSize = 15.sp, color = TextWhite)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .border(
+                                width = 1.dp,
+                                color = Secondary,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_heart_outline),
+                                    contentDescription = "person add Icon",
+                                    tint = Primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(24.dp))
+
+                                Column {
+                                    Text(
+                                        text = "You're not alone",
+                                        fontSize = 14.sp,
+                                        color = TextWhite,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "Join thousands who’ve found comfort, tools, and community in their mental wellness journey. Your privacy and well-being are our top priorities.  \uD83D\uDC9C",
+                                        fontSize = 13.sp,
+                                        color = MutedText,
+                                        lineHeight = 18.sp,
+                                        modifier = Modifier.padding(top = 6.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            Button(
-                onClick = { navController.navigate("login") },
-                colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(50.dp)
-                    .semantics {
-                        contentDescription = "navigateToLoginButton"
-                    }
-            ) {
-                Text("Prijavi se", fontSize = 16.sp, color = Color.White)
-            }
+            Text(
+                text = "Taking this step shows incredible courage and self-care 🌞",
+                fontSize = 10.sp,
+                color = MutedText
+            )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    val signInIntent = googleSignInClient.signInIntent
-                    (context as? Activity)?.startActivityForResult(signInIntent, RC_SIGN_IN)
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Purple80),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(50.dp)
-                    .semantics {
-                        contentDescription = "loginWithGoogle"
-                    }
-            ) {
-                Text("Prijava putem Google računa", fontSize = 14.sp, color = Color.White)
-            }
-
+            Text(
+                text = "🧘‍♀️ 🦋 🌙 💜",
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }
