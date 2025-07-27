@@ -21,6 +21,7 @@ fun BottomBar(navController: NavHostController) {
     val items = listOf(
         BottomNavigationItems.Home,
         BottomNavigationItems.Test,
+        BottomNavigationItems.Insights,
         BottomNavigationItems.Notes,
         BottomNavigationItems.ProfileScreen
     )
@@ -29,52 +30,44 @@ fun BottomBar(navController: NavHostController) {
     val currentDestination = navBackStackEntry.value?.destination
 
     NavigationBar(
-        containerColor = Color(0xFF1A1525),
+        containerColor = MaterialTheme.colorScheme.background,
         tonalElevation = 0.dp,
         modifier = Modifier.height(56.dp)
     ) {
         items.forEach { item ->
             val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
 
-            NavigationBarItem(
-                selected = selected,
-                onClick = {
-                    if (!selected) {
-                        navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
+            NavigationBarItem(selected = selected, onClick = {
+                if (!selected) {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
                         }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                },
-                icon = {
-                    item.icon?.let {
-                        Icon(
-                            imageVector = it,
-                            contentDescription = item.title,
-                            tint = if (selected) Color(0xFF9F7AEA) else Color(0xFFB9B5C9),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                },
-                label = {
-                    item.title?.let {
-                        Text(
-                            text = it,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (selected) Color(0xFF9F7AEA) else Color(0xFFB9B5C9)
-                        )
-                    }
-                },
-                alwaysShowLabel = true,
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = Color.Transparent
-                ),
-                interactionSource = remember { MutableInteractionSource() }
-            )
+                }
+            }, icon = {
+                item.icon?.let {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = item.title,
+                        tint = if (selected) Color(0xFF9F7AEA) else Color(0xFFB9B5C9),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }, label = {
+                item.title?.let {
+                    Text(
+                        text = it,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (selected) Color(0xFF9F7AEA) else Color(0xFFB9B5C9)
+                    )
+                }
+            }, alwaysShowLabel = true, colors = NavigationBarItemDefaults.colors(
+                indicatorColor = Color.Transparent
+            ), interactionSource = remember { MutableInteractionSource() })
         }
     }
 }

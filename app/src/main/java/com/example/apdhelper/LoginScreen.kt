@@ -33,6 +33,7 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun LoginScreen(navController: NavController) {
     val context = LocalContext.current
+    val colorScheme = MaterialTheme.colorScheme
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -47,27 +48,28 @@ fun LoginScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(colorScheme.background)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth() .verticalScroll(
-                rememberScrollState()
-            )
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
         ) {
             Box(
                 modifier = Modifier
                     .padding(bottom = 30.dp)
                     .size(80.dp)
                     .background(
-                        color = Primary, shape = RoundedCornerShape(20.dp)
+                        color = colorScheme.primary, shape = RoundedCornerShape(20.dp)
                     ), contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = "Heart Outline",
-                    tint = Secondary,
+                    tint = colorScheme.secondary,
                     modifier = Modifier.size(50.dp)
                 )
             }
@@ -76,7 +78,7 @@ fun LoginScreen(navController: NavController) {
                 text = "Welcome Back!",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -84,41 +86,37 @@ fun LoginScreen(navController: NavController) {
             Text(
                 text = "We're so glad you're here. Let's continue your wellness journey together.",
                 fontSize = 14.sp,
-                color = TextPrimary.copy(alpha = 0.7f),
+                color = colorScheme.onBackground.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            OutlinedTextField(value = email,
-                onValueChange = { email = it },
-                placeholder = {
-                    Text(
-                        "your.email@example.com", color = TextPrimary.copy(alpha = 0.5f)
-                    )
-                },
-                label = { Text("Email Address", color = TextPrimary) },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedLabelColor = Color.Gray,
-                    unfocusedLabelColor = Color.Gray,
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.White
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(
-                        width = 1.dp, color = Secondary, shape = RoundedCornerShape(12.dp)
-                    )
+            OutlinedTextField(value = email, onValueChange = { email = it }, placeholder = {
+                Text(
+                    "your.email@example.com",
+                    color = colorScheme.onBackground.copy(alpha = 0.5f)
+                )
+            }, label = {
+                Text("Email Address", color = colorScheme.onBackground)
+            }, singleLine = true, colors = TextFieldDefaults.colors(
+                focusedTextColor = colorScheme.onBackground,
+                unfocusedTextColor = colorScheme.onBackground,
+                focusedLabelColor = colorScheme.onBackground.copy(alpha = 0.8f),
+                unfocusedLabelColor = colorScheme.onBackground.copy(alpha = 0.5f),
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = colorScheme.primary
+            ), keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email, imeAction = ImeAction.Next
+            ), modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    width = 1.dp, color = colorScheme.secondary, shape = RoundedCornerShape(12.dp)
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -127,34 +125,36 @@ fun LoginScreen(navController: NavController) {
                 onValueChange = { password = it },
                 placeholder = {
                     Text(
-                        "Enter your secure password", color = TextPrimary.copy(alpha = 0.5f)
+                        "Enter your secure password",
+                        color = colorScheme.onBackground.copy(alpha = 0.5f)
                     )
                 },
-                label = { Text("Password", color = TextPrimary) },
+                label = {
+                    Text("Password", color = colorScheme.onBackground)
+                },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.Visibility
-                    else Icons.Filled.VisibilityOff
-
+                    val image =
+                        if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = image,
                             contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                            tint = Primary
+                            tint = colorScheme.primary
                         )
                     }
                 },
                 colors = TextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedLabelColor = Color.Gray,
-                    unfocusedLabelColor = Color.Gray,
+                    focusedTextColor = colorScheme.onBackground,
+                    unfocusedTextColor = colorScheme.onBackground,
+                    focusedLabelColor = colorScheme.onBackground.copy(alpha = 0.8f),
+                    unfocusedLabelColor = colorScheme.onBackground.copy(alpha = 0.5f),
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    cursorColor = Color.White
+                    cursorColor = colorScheme.primary
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password, imeAction = ImeAction.Done
@@ -162,7 +162,9 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(
-                        width = 1.dp, color = Secondary, shape = RoundedCornerShape(12.dp)
+                        width = 1.dp,
+                        color = colorScheme.secondary,
+                        shape = RoundedCornerShape(12.dp)
                     )
             )
 
@@ -197,14 +199,23 @@ fun LoginScreen(navController: NavController) {
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = !loading
+                enabled = !loading,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorScheme.primary, contentColor = colorScheme.onPrimary
+                )
             ) {
                 if (loading) {
                     CircularProgressIndicator(
-                        color = Background, modifier = Modifier.size(24.dp), strokeWidth = 2.dp
+                        color = colorScheme.background,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = "Sign In Safely ✨", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = "Sign In Safely ✨",
+                        fontWeight = FontWeight.SemiBold,
+                        color = colorScheme.background
+                    )
                 }
             }
 
@@ -212,12 +223,12 @@ fun LoginScreen(navController: NavController) {
 
             TextButton(onClick = {
                 showResetDialog = true
-                resetEmail = "" // inicijalno prazno
+                resetEmail = ""
             }) {
                 Text(
                     text = "Forgot your password? We'll help you reset it 🔒",
                     fontSize = 12.sp,
-                    color = TextPrimary.copy(alpha = 0.7f)
+                    color = colorScheme.onBackground.copy(alpha = 0.7f)
                 )
             }
 
@@ -228,9 +239,10 @@ fun LoginScreen(navController: NavController) {
                     text = "New to our community? Join us today! 🌈",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Primary
+                    color = colorScheme.primary
                 )
             }
+
             if (showResetDialog) {
                 AlertDialog(onDismissRequest = { if (!resetLoading) showResetDialog = false },
                     title = { Text("Reset Password") },

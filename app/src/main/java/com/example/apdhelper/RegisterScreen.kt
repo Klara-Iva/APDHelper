@@ -31,6 +31,7 @@ import com.example.apdhelper.ui.theme.TextPrimary
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+
 @Composable
 fun RegisterScreen(navController: NavController) {
     val context = LocalContext.current
@@ -43,11 +44,12 @@ fun RegisterScreen(navController: NavController) {
     var loading by remember { mutableStateOf(false) }
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
+    val colors = MaterialTheme.colorScheme
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background)
+            .background(colors.background)
             .padding(32.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -64,13 +66,13 @@ fun RegisterScreen(navController: NavController) {
                     .padding(bottom = 30.dp)
                     .size(80.dp)
                     .background(
-                        color = Primary, shape = RoundedCornerShape(20.dp)
+                        color = colors.primary, shape = RoundedCornerShape(20.dp)
                     ), contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = "Heart Outline",
-                    tint = Secondary,
+                    tint = colors.secondary,
                     modifier = Modifier.size(50.dp)
                 )
             }
@@ -79,7 +81,7 @@ fun RegisterScreen(navController: NavController) {
                 text = "Join Our Community! 🌸",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = colors.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -87,7 +89,7 @@ fun RegisterScreen(navController: NavController) {
             Text(
                 text = "Take the first step towards better mental wellness. We're here to support you every day.",
                 fontSize = 14.sp,
-                color = TextPrimary.copy(alpha = 0.7f),
+                color = colors.onSurface.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -109,8 +111,7 @@ fun RegisterScreen(navController: NavController) {
                 keyboardType = KeyboardType.Email
             )
             Spacer(modifier = Modifier.height(16.dp))
-            CustomPasswordField(
-                value = password,
+            CustomPasswordField(value = password,
                 onValueChange = { password = it },
                 visible = passwordVisible,
                 onVisibilityChange = { passwordVisible = it },
@@ -176,10 +177,16 @@ fun RegisterScreen(navController: NavController) {
             ) {
                 if (loading) {
                     CircularProgressIndicator(
-                        color = Background, modifier = Modifier.size(24.dp), strokeWidth = 2.dp
+                        color = colors.background,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
                     )
                 } else {
-                    Text(text = "Start Your Journey 🚀", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = "Start Your Journey 🚀",
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.background
+                    )
                 }
             }
             Spacer(
@@ -193,7 +200,7 @@ fun RegisterScreen(navController: NavController) {
                     text = "Already part of our family? Welcome back! 💜",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Primary
+                    color = colors.primary
                 )
             }
 
@@ -212,24 +219,28 @@ fun CustomTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = TextPrimary) },
-        placeholder = { Text(placeholder, color = TextPrimary.copy(alpha = 0.5f)) },
+        label = { Text(label, color = MaterialTheme.colorScheme.onSurface) },
+        placeholder = {
+            Text(
+                placeholder, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         colors = TextFieldDefaults.colors(
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
+            focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
             focusedLabelColor = Color.Gray,
             unfocusedLabelColor = Color.Gray,
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = Color.White
+            cursorColor = MaterialTheme.colorScheme.primary
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Secondary, shape = RoundedCornerShape(12.dp))
+            .border(1.dp, MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(12.dp))
     )
 }
 
@@ -245,7 +256,7 @@ fun CustomPasswordField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label, color = TextPrimary) },
+        label = { Text(label, color = MaterialTheme.colorScheme.onSurface) },
         placeholder = { Text(placeholder, color = TextPrimary.copy(alpha = 0.5f)) },
         singleLine = true,
         visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -254,24 +265,24 @@ fun CustomPasswordField(
                 Icon(
                     imageVector = if (visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
                     contentDescription = null,
-                    tint = Primary
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         },
         colors = TextFieldDefaults.colors(
-            focusedTextColor = Color.White,
-            unfocusedTextColor = Color.White,
+            focusedTextColor = MaterialTheme.colorScheme.onPrimary,
+            unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
             focusedLabelColor = Color.Gray,
             unfocusedLabelColor = Color.Gray,
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = Color.White
+            cursorColor = MaterialTheme.colorScheme.primary
         ),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Secondary, shape = RoundedCornerShape(12.dp))
+            .border(1.dp, MaterialTheme.colorScheme.secondary, shape = RoundedCornerShape(12.dp))
     )
 }

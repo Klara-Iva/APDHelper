@@ -14,6 +14,8 @@ navigationRuntimeAndroid = "2.9.0"
 navigationComposeAndroid = "2.9.0"
 firebaseAuthKtx = "23.2.1"
 play-services-auth = "21.0.0"
+tflite = "2.14.0"
+tflite-support = "0.4.3"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,6 +38,8 @@ androidx-navigation-compose-android = { group = "androidx.navigation", name = "n
 firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 play_services_auth = { module = "com.google.android.gms:play-services-auth", version.ref = "play_services_auth" }
 androidx-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version = "1.4.3" }
+tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tflite" }
+tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tflite-support" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

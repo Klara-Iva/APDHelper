@@ -1,6 +1,5 @@
 package com.example.apdhelper.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
@@ -10,7 +9,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
@@ -27,21 +25,21 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Primary,
-    secondary = Secondary,
-    background = Background,
-    surface = Surface,
-    onPrimary = TextWhite,
-    onSecondary = TextWhite,
-    onSurface = TextPrimary,
-    onBackground = TextPrimary,
-    outline = BorderColor
+    primary = LightPrimary,
+    secondary = LightSecondary,
+    background = LightBackground,
+    surface = LightSurface,
+    onPrimary = LightTextWhite,
+    onSecondary = LightTextWhite,
+    onSurface = LightTextPrimary,
+    onBackground = LightTextPrimary,
+    outline = LightBorderColor
 )
 
 @Composable
 fun APDHelperTheme(
-    darkTheme: Boolean = true, // forsiramo dark theme
-    dynamicColor: Boolean = false, // isključujemo dinamičke boje
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme: ColorScheme = when {

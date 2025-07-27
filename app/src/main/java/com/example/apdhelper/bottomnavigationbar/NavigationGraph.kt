@@ -11,7 +11,7 @@ fun NavigationGraph(
     navController: NavHostController,
     onBottomBarVisibilityChanged: (Boolean) -> Unit
 ) {
-    NavHost(navController = navController, startDestination = "start") {
+    NavHost(navController = navController, startDestination = "loadingscreen") {
 
         composable("start") {
             onBottomBarVisibilityChanged(false)
@@ -38,9 +38,35 @@ fun NavigationGraph(
             ProfileScreen(navController)
         }
 
+        composable("insights") {
+            InsightsScreen(navController)
+        }
+
         composable("notes") {
             onBottomBarVisibilityChanged(true)
             NotesScreen(navController)
         }
+
+        composable("questionnaire") {
+            onBottomBarVisibilityChanged(true)
+            QuestionnaireScreen(navController)
+        }
+
+        composable("loadingscreen") {
+            onBottomBarVisibilityChanged(false)
+            LoadingScreen(navController = navController)
+        }
+        composable("questions") {
+            onBottomBarVisibilityChanged(true)
+            Questions(navController)
+        }
+        composable("results") {
+            onBottomBarVisibilityChanged(true)
+            ResultsScreen(navController = navController)
+        }
+        composable("add_note") {
+            AddNewNoteScreen(navController)
+        }
+
     }
 }

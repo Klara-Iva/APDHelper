@@ -20,6 +20,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 val LocalGoogleSignInLauncher = compositionLocalOf<() -> Unit> {
     error("Google Sign-In launcher not provided")
@@ -37,9 +40,7 @@ class MainActivity : ComponentActivity() {
             val context = this
 
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build()
+                .requestIdToken(getString(R.string.default_web_client_id)).requestEmail().build()
 
             val googleSignInClient = GoogleSignIn.getClient(context, gso)
 
@@ -68,12 +69,11 @@ class MainActivity : ComponentActivity() {
                                                 isBottomBarVisible = true
                                             } else {
                                                 val newUser = hashMapOf(
-                                                    "name" to (currentUser.displayName ?: "Unknown"),
-                                                    "email" to email
+                                                    "name" to (currentUser.displayName
+                                                        ?: "Unknown"), "email" to email
                                                 )
                                                 firestore.collection("users").document(uid)
-                                                    .set(newUser)
-                                                    .addOnSuccessListener {
+                                                    .set(newUser).addOnSuccessListener {
                                                         Toast.makeText(
                                                             context,
                                                             "New user created successfully!",
@@ -83,8 +83,7 @@ class MainActivity : ComponentActivity() {
                                                             popUpTo("start") { inclusive = true }
                                                         }
                                                         isBottomBarVisible = true
-                                                    }
-                                                    .addOnFailureListener { e ->
+                                                    }.addOnFailureListener { e ->
                                                         Toast.makeText(
                                                             context,
                                                             "Failed to create user: ${e.message}",
@@ -100,43 +99,55 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
 
-            CompositionLocalProvider(
-                LocalGoogleSignInLauncher provides {
-                    launcher.launch(googleSignInClient.signInIntent)
-                }
-            ) {
+            CompositionLocalProvider(LocalGoogleSignInLauncher provides {
+                launcher.launch(googleSignInClient.signInIntent)
+            }) {
                 APDHelperTheme {
-                    LaunchedEffect(auth.currentUser) {
-                        if (auth.currentUser != null) {
-                            navController.navigate("home") {
-                                popUpTo("start") { inclusive = true }
-                            }
-                            isBottomBarVisible = true
-                        }
-                    }
 
-                    Scaffold(
-                        bottomBar = {
-                            if (isBottomBarVisible) {
-                                BottomBar(navController = navController)
-                            }
+                    val uid = FirebaseAuth.getInstance().currentUser?.uid
+                    val db = FirebaseFirestore.getInstance()
+                    val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+
+
+                    Scaffold(bottomBar = {
+                        if (isBottomBarVisible) {
+                            BottomBar(navController = navController)
                         }
-                    ) { padding ->
+                    }) { padding ->
                         Box(modifier = Modifier.padding(padding)) {
-                            NavigationGraph(
-                                navController = navController,
+                            NavigationGraph(navController = navController,
                                 onBottomBarVisibilityChanged = { visible ->
                                     isBottomBarVisible = visible
-                                }
-                            )
+                                })
                         }
+                        LaunchedEffect(auth.currentUser) {
+                            if (auth.currentUser != null) {
+                                navController.navigate("home") {
+                                    popUpTo("start") { inclusive = true }
+                                }
+                                isBottomBarVisible = true
+
+                            }
+
+
+                            if (uid != null) {
+                                db.collection("users").document(uid).collection("visits")
+                                    .document(today)
+                                    .set(mapOf("timestamp" to com.google.firebase.Timestamp.now()))
+                            }
+                        }
+
                     }
+
                 }
             }
         }
     }
 }
+

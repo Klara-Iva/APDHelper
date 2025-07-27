@@ -13,36 +13,33 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import kotlin.system.exitProcess
 import com.example.apdhelper.ui.theme.*
-
 
 @Composable
 fun StartScreen(navController: NavController) {
 
     val signIn = LocalGoogleSignInLauncher.current
+    val colors = MaterialTheme.colorScheme
 
     BackHandler {
         exitProcess(0)
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -57,29 +54,25 @@ fun StartScreen(navController: NavController) {
                     .padding(bottom = 30.dp)
                     .size(80.dp)
                     .background(
-                        color = Primary,
-                        shape = RoundedCornerShape(20.dp)
-                    ),
-                contentAlignment = Alignment.Center
+                        color = colors.primary, shape = RoundedCornerShape(20.dp)
+                    ), contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = "Heart Outline",
-                    tint = IconTintPrimary,
+                    tint = colors.onPrimary,
                     modifier = Modifier.size(50.dp)
                 )
             }
 
             Text(
-                text = "Welcome to APDHelper \uD83C\uDF19",
-                fontSize = 22.sp,
-                color = Primary
+                text = "Welcome to APDHelper 🌙", fontSize = 22.sp, color = colors.primary
             )
 
             Text(
                 text = "Your safe haven for managing anxiety and finding inner peace. We're here to support you on your wellness journey. ✨",
                 fontSize = 14.sp,
-                color = TextPrimary,
+                color = colors.onBackground,
                 lineHeight = 20.sp,
                 modifier = Modifier
                     .padding(top = 8.dp, bottom = 32.dp)
@@ -92,14 +85,14 @@ fun StartScreen(navController: NavController) {
                 text = "Let’s get started! 🚀",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Primary,
+                color = colors.primary,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
             Text(
                 text = "Choose how you'd like to join our supportive community",
                 fontSize = 14.sp,
-                color = TextPrimary,
+                color = colors.onBackground,
                 modifier = Modifier.padding(bottom = 11.dp),
                 textAlign = TextAlign.Center,
             )
@@ -108,8 +101,7 @@ fun StartScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-                        color = Surface,
-                        shape = RoundedCornerShape(24.dp)
+                        color = colors.surface, shape = RoundedCornerShape(24.dp)
                     )
                     .padding(24.dp)
             ) {
@@ -119,26 +111,21 @@ fun StartScreen(navController: NavController) {
                 ) {
 
                     Button(
-                        onClick = {
-                            signIn()
-                        },
+                        onClick = { signIn() },
                         elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 12.dp
+                            defaultElevation = 8.dp, pressedElevation = 12.dp
                         ),
-                        colors = ButtonDefaults.buttonColors(containerColor = Primary),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.primary),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 painter = painterResource(id = R.drawable.outline_email_24),
                                 contentDescription = "Email Icon",
-                                tint = Background,
+                                tint = colors.background,
                                 modifier = Modifier.size(20.dp)
                             )
 
@@ -147,7 +134,7 @@ fun StartScreen(navController: NavController) {
                             Text(
                                 "Continue with Google ⚡",
                                 fontSize = 15.sp,
-                                color = Background
+                                color = colors.background
                             )
                         }
                     }
@@ -161,20 +148,18 @@ fun StartScreen(navController: NavController) {
                         Divider(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(1.dp),
-                            color = DividerColor
+                                .height(1.dp), color = colors.outline
                         )
                         Text(
                             text = "or",
                             modifier = Modifier.padding(horizontal = 8.dp),
-                            color = TextWhite,
+                            color = colors.onPrimary,
                             fontSize = 14.sp
                         )
                         Divider(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(1.dp),
-                            color = DividerColor
+                                .height(1.dp), color = colors.outline
                         )
                     }
 
@@ -183,27 +168,24 @@ fun StartScreen(navController: NavController) {
                     Button(
                         onClick = { navController.navigate("login") },
                         elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 12.dp
+                            defaultElevation = 8.dp, pressedElevation = 12.dp
                         ),
-                        colors = ButtonDefaults.buttonColors(containerColor = Surface),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.surface),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
                             .border(
                                 width = 1.dp,
-                                color = Secondary,
+                                color = colors.secondary,
                                 shape = RoundedCornerShape(16.dp)
                             )
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 painter = painterResource(id = R.drawable.outline_person_24),
                                 contentDescription = "person Icon",
-                                tint = Primary,
+                                tint = colors.primary,
                                 modifier = Modifier.size(20.dp)
                             )
 
@@ -212,27 +194,26 @@ fun StartScreen(navController: NavController) {
                             Text(
                                 "Sign In to Your Account 🔐",
                                 fontSize = 15.sp,
-                                color = Primary
+                                color = colors.primary
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
                         onClick = { navController.navigate("register") },
                         elevation = ButtonDefaults.buttonElevation(
-                            defaultElevation = 8.dp,
-                            pressedElevation = 12.dp
+                            defaultElevation = 8.dp, pressedElevation = 12.dp
                         ),
-                        colors = ButtonDefaults.buttonColors(containerColor = Surface),
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.surface),
                         shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp)
                             .border(
                                 width = 1.dp,
-                                color = Secondary,
+                                color = colors.secondary,
                                 shape = RoundedCornerShape(16.dp)
                             )
                     ) {
@@ -240,13 +221,13 @@ fun StartScreen(navController: NavController) {
                             Icon(
                                 painter = painterResource(id = R.drawable.outline_person_add_alt_1_24),
                                 contentDescription = "person add Icon",
-                                tint = TextWhite,
+                                tint = colors.onPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
 
                             Spacer(modifier = Modifier.width(12.dp))
 
-                            Text("Create New Account 🌱", fontSize = 15.sp, color = TextWhite)
+                            Text("Create New Account 🌱", fontSize = 15.sp, color = colors.onPrimary)
                         }
                     }
 
@@ -256,19 +237,17 @@ fun StartScreen(navController: NavController) {
                         modifier = Modifier
                             .border(
                                 width = 1.dp,
-                                color = Secondary,
+                                color = colors.secondary,
                                 shape = RoundedCornerShape(16.dp)
                             )
                             .padding(16.dp)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Row {
                                 Icon(
                                     painter = painterResource(id = R.drawable.ic_heart_outline),
                                     contentDescription = "person add Icon",
-                                    tint = Primary,
+                                    tint = colors.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(24.dp))
@@ -277,13 +256,13 @@ fun StartScreen(navController: NavController) {
                                     Text(
                                         text = "You're not alone",
                                         fontSize = 14.sp,
-                                        color = TextWhite,
+                                        color = colors.onPrimary,
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "Join thousands who’ve found comfort, tools, and community in their mental wellness journey. Your privacy and well-being are our top priorities.  \uD83D\uDC9C",
+                                        text = "Join thousands who’ve found comfort, tools, and community in their mental wellness journey. Your privacy and well-being are our top priorities.  💜",
                                         fontSize = 13.sp,
-                                        color = MutedText,
+                                        color = colors.onSurface.copy(alpha = 0.7f),
                                         lineHeight = 18.sp,
                                         modifier = Modifier.padding(top = 6.dp),
                                     )
@@ -299,13 +278,11 @@ fun StartScreen(navController: NavController) {
             Text(
                 text = "Taking this step shows incredible courage and self-care 🌞",
                 fontSize = 10.sp,
-                color = MutedText
+                color = colors.onSurface.copy(alpha = 0.7f)
             )
 
             Text(
-                text = "🧘‍♀️ 🦋 🌙 💜",
-                fontSize = 12.sp,
-                modifier = Modifier.padding(top = 4.dp)
+                text = "🧘‍♀️ 🦋 🌙 💜", fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp)
             )
         }
     }

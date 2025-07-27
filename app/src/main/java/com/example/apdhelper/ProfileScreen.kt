@@ -1,8 +1,8 @@
 package com.example.apdhelper
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -12,352 +12,210 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.outlined.Help
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Logout
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.apdhelper.ui.theme.*
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import android.widget.Toast
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.style.TextOverflow
+import com.google.firebase.firestore.firestore
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
-fun ProfileScreen(
-    navController: NavController,
-    testsCompleted: Int = 12,
-    notesWritten: Int = 28,
-    daysActive: Int = 45,
-    onSettingsClick: () -> Unit = {},
-    onHelpClick: () -> Unit = {}
-) {
-    // Boje, možeš ih staviti u svoj theme file i importati
-    val bgColor = Color(0xFF1C1732)
-    val cardColor = Color(0xFF2B2547)
-    val primaryColor = Color(0xFF9887F3) // ljubičasta za istaknuto
-    val secondaryText = Color(0xFFC7C0D4)
-    val mutedText = Color(0xFF857FB5)
-    val errorRed = Color(0xFFB35353)
-
+fun ProfileScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
     val context = LocalContext.current
+    val colors = MaterialTheme.colorScheme
+
 
     var userName by remember { mutableStateOf<String?>(null) }
     var userEmail by remember { mutableStateOf<String?>(null) }
-    var memberSince by remember { mutableStateOf("Unknown") }
+    var testCount by remember { mutableStateOf(0) }
+    var noteCount by remember { mutableStateOf(0) }
+    var streak by remember { mutableStateOf(0) }
     var loading by remember { mutableStateOf(true) }
 
     val uid = auth.currentUser?.uid
+    val memberSince = FirebaseAuth.getInstance().currentUser?.metadata?.creationTimestamp?.let {
+        SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(Date(it))
+    } ?: "Unknown"
 
-    LaunchedEffect(uid) {
+    val achievements = remember(testCount, noteCount, streak) {
+        listOfNotNull(
+            if (streak >= 7) Triple("🏆", "7-Day Streak", "Daily check-ins complete") else null,
+            if (testCount >= 1) Triple("🧠", "First Assessment", "Completed 1st test") else null,
+            if (noteCount >= 10) Triple("📝", "Mindful Writer", "Logged 10+ notes") else null
+        )
+    }
+
+    LaunchedEffect(Unit) {
         if (uid != null) {
-            firestore.collection("users").document(uid).get()
-                .addOnSuccessListener { doc ->
-                    if (doc != null && doc.exists()) {
-                        userName = doc.getString("name")
-                        userEmail = doc.getString("email")
-                        memberSince = doc.getString("memberSince") ?: "Unknown"
-                    } else {
-                        Toast.makeText(context, "User data not found", Toast.LENGTH_SHORT).show()
+            firestore.collection("users").document(uid).get().addOnSuccessListener { doc ->
+                    userName = doc.getString("name")
+                    userEmail = doc.getString("email")
+                    loading = false
+                }.addOnFailureListener {
+                    Toast.makeText(context, "Failed to load profile.", Toast.LENGTH_SHORT).show()
+                }
+
+            firestore.collection("users").document(uid).collection("tests")
+                .document("PanicDisorderTests").collection("entries").get()
+                .addOnSuccessListener { result ->
+                    testCount = result.size()
+                }
+
+            firestore.collection("users").document(uid).collection("notes").get()
+                .addOnSuccessListener { noteCount = it.size() }
+
+            firestore.collection("users").document(uid).collection("visits").get()
+                .addOnSuccessListener { result ->
+                    val dates = result.documents.mapNotNull { it.id }.mapNotNull {
+                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(it)
+                        }.sortedDescending()
+
+                    var count = 0
+                    val calendar = Calendar.getInstance()
+
+                    for (date in dates) {
+                        val todayStr = SimpleDateFormat(
+                            "yyyy-MM-dd", Locale.getDefault()
+                        ).format(calendar.time)
+                        val visitStr =
+                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(date)
+                        if (visitStr == todayStr) {
+                            count++
+                            calendar.add(Calendar.DAY_OF_YEAR, -1)
+                        } else break
                     }
-                    loading = false
+                    streak = count
                 }
-                .addOnFailureListener { e ->
-                    Toast.makeText(context, "Error loading user data: ${e.message}", Toast.LENGTH_LONG).show()
-                    loading = false
-                }
-        } else {
-            navController.navigate("start") {
-                popUpTo("profile") { inclusive = true }
-            }
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = bgColor
-    ) {
+    Surface(modifier = Modifier.fillMaxSize(), color = colors.background) {
         if (loading) {
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = primaryColor)
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = colors.primary)
             }
         } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // PROFILE HEADER CARD
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardColor)
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
+                ProfileHeader(userName, userEmail, memberSince)
+                Spacer(modifier = Modifier.height(28.dp))
+                GradientCardSection(title = "Your Statistics", gradient = themedGradientBrush()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Box(modifier = Modifier.size(80.dp), contentAlignment = Alignment.Center) {
-                            Box(
+                        StatisticItem(testCount, "Tests", true, colors.primary)
+                        StatisticItem(noteCount, "Notes", false, colors.primary)
+                        StatisticItem(streak, "Streak", false, colors.primary)
+                    }
+                }
+                Spacer(modifier = Modifier.height(28.dp))
+                if (achievements.isNotEmpty()) {
+                    GradientCardSection(title = "Achievements", gradient = themedGradientBrush()) {
+                        achievements.forEach {
+                            Row(
                                 modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(CircleShape)
-                                    .background(primaryColor),
-                                contentAlignment = Alignment.Center
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = userName?.split(" ")?.map { it.first() }?.joinToString("") ?: "?",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 32.sp
-                                )
+                                Text(it.first, fontSize = 26.sp)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        it.second,
+                                        lineHeight = 16.sp,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = colors.primary,
+                                    )
+                                    Text(
+                                        it.third,
+                                        lineHeight = 15.sp,
+                                        fontSize = 13.sp,
+                                        color = colors.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.weight(1f))
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            color = Primary.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                                ) {
+                                    Text(
+                                        "Earned",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(primaryColor.copy(alpha = 0.7f))
-                                    .border(1.dp, Color.White, CircleShape)
-                                    .align(Alignment.BottomEnd)
-                                    .clickable { /* Edit profile click logic */ },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = "Edit Profile",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(
-                            text = userName ?: "Unknown",
-                            color = secondaryText,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Email,
-                                contentDescription = "Email Icon",
-                                tint = mutedText,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = userEmail ?: "Unknown",
-                                color = secondaryText,
-                                fontSize = 15.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.CalendarToday,
-                                contentDescription = "Member since Icon",
-                                tint = mutedText,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "Member since $memberSince",
-                                color = secondaryText,
-                                fontSize = 15.sp
-                            )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
 
-                // YOUR STATISTICS CARD
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardColor)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp)
-                    ) {
-                        Text(
-                            text = "Your Statistics",
-                            color = mutedText,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Start
-                        )
 
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            StatisticItem(
-                                count = testsCompleted,
-                                label = "Tests Completed",
-                                isHighlighted = true,
-                                primaryColor = primaryColor,
-                                secondaryColor = cardColor,
-                                textColor = Color.White
-                            )
-                            StatisticItem(
-                                count = notesWritten,
-                                label = "Notes Written",
-                                isHighlighted = false,
-                                primaryColor = primaryColor,
-                                secondaryColor = cardColor,
-                                textColor = mutedText
-                            )
-                            StatisticItem(
-                                count = daysActive,
-                                label = "Days Active",
-                                isHighlighted = false,
-                                primaryColor = primaryColor,
-                                secondaryColor = cardColor,
-                                textColor = mutedText
-                            )
-                        }
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(28.dp))
+                GradientCardSection(title = "Account", gradient = themedGradientBrush()) {
+                    AccountActionButton("Settings and Privacy", Icons.Outlined.Settings)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    AccountActionButton("Help & Support", Icons.Outlined.Help)
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                // ACHIEVEMENTS CARD
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardColor)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.EmojiEvents,
-                                contentDescription = "Achievements Icon",
-                                tint = mutedText,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Achievements",
-                                color = mutedText,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 16.sp
-                            )
-                        }
 
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        AchievementItem(
-                            icon = "🏆",
-                            title = "7-Day Streak",
-                            description = "Completed daily check-ins",
-                            primaryColor = primaryColor,
-                            secondaryColor = mutedText
-                        )
-                        AchievementItem(
-                            icon = "🎯",
-                            title = "First Assessment",
-                            description = "Completed your first anxiety test",
-                            primaryColor = primaryColor,
-                            secondaryColor = mutedText
-                        )
-                        AchievementItem(
-                            icon = "✍️",
-                            title = "Mindful Writer",
-                            description = "Created 10+ notes",
-                            primaryColor = primaryColor,
-                            secondaryColor = mutedText
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                // ACCOUNT CARD
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardColor)
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = "Account",
-                            color = mutedText,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Start
-                        )
-                        Spacer(modifier = Modifier.height(14.dp))
-                        ProfileMenuItem(
-                            text = "Settings & Privacy",
-                            icon = Icons.Outlined.Settings,
-                            onClick = onSettingsClick,
-                            backgroundColor = cardColor,
-                            contentColor = mutedText
-                        )
-                        ProfileMenuItem(
-                            text = "Help & Support",
-                            icon = Icons.Outlined.Help,
-                            onClick = onHelpClick,
-                            backgroundColor = cardColor,
-                            contentColor = mutedText
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        ProfileMenuItem(
-                            text = "Log Out",
-                            icon = Icons.Outlined.Logout,
-                            onClick = {
-                                auth.signOut()
+                    val googleSignInClient = GoogleSignIn.getClient(
+                        context,
+                        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(context.getString(R.string.default_web_client_id))
+                            .requestEmail().build()
+                    )
+                    Button(
+                        onClick = {
+                            FirebaseAuth.getInstance().signOut()
+                            googleSignInClient.signOut().addOnCompleteListener {
                                 navController.navigate("start") {
                                     popUpTo("profile") { inclusive = true }
                                 }
-                            },
-                            backgroundColor = errorRed,
+                            }
+                        }, colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFF6B6B).copy(alpha = 0.6f),
                             contentColor = Color.White
-                        )
+                        ), shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.Logout, contentDescription = "Logout")
+                            Spacer(Modifier.width(8.dp))
+                            Text("Log Out")
+                        }
                     }
                 }
             }
@@ -366,107 +224,127 @@ fun ProfileScreen(
 }
 
 @Composable
-fun StatisticItem(
-    count: Int,
-    label: String,
-    isHighlighted: Boolean,
-    primaryColor: Color,
-    secondaryColor: Color,
-    textColor: Color
+fun GradientCardSection(
+    title: String, gradient: Brush, content: @Composable ColumnScope.() -> Unit
 ) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(gradient, RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+            .padding(20.dp)
+    ) {
+        Text(title, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+        Spacer(Modifier.height(14.dp))
+        content()
+    }
+}
+
+@Composable
+fun ProfileHeader(name: String?, email: String?, since: String) {
+    val initials =
+        name?.split(" ")?.map { it.firstOrNull()?.uppercase() ?: "" }?.joinToString("") ?: "?"
+    val colors = MaterialTheme.colorScheme
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.size(80.dp), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(colors.primary),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    initials,
+                    color = colors.onPrimary,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(colors.primary.copy(alpha = 0.7f))
+                    .border(1.dp, colors.onPrimary, CircleShape)
+                    .align(Alignment.BottomEnd),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Edit,
+                    contentDescription = null,
+                    tint = colors.onPrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
+        Text(
+            name ?: "Unknown",
+            color = colors.onSurface,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Medium
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(email ?: "Unknown", color = colors.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
+        Spacer(Modifier.height(6.dp))
+        Text("Member since $since", color = colors.onSurface.copy(alpha = 0.6f), fontSize = 14.sp)
+    }
+}
+
+@Composable
+fun StatisticItem(count: Int, label: String, highlight: Boolean, color: Color) {
     Box(
         modifier = Modifier
-           .height(84.dp)
+            .width(100.dp)
+            .height(84.dp)
+            .border(
+                width = 1.dp, brush = themedGradientBrush(), shape = RoundedCornerShape(12.dp)
+            )
             .background(
-                color = if (isHighlighted) primaryColor else secondaryColor,
-                shape = RoundedCornerShape(12.dp)
-            ),
-        contentAlignment = Alignment.Center
+                if (highlight) color.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
+                RoundedCornerShape(12.dp)
+            ), contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "$count",
-                color = textColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = label,
-                color = textColor,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center
-            )
+            Text("$count", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = color)
+            Text(label, fontSize = 14.sp, color = TextPrimary, textAlign = TextAlign.Center)
         }
     }
 }
 
 @Composable
-fun AchievementItem(
-    icon: String,
-    title: String,
-    description: String,
-    primaryColor: Color,
-    secondaryColor: Color
-) {
+fun AchievementItem(icon: String, title: String, desc: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.Top
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = icon, fontSize = 26.sp, modifier = Modifier.padding(end = 14.dp))
+        Text(icon, fontSize = 22.sp, modifier = Modifier.padding(end = 12.dp))
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = title,
-                    color = primaryColor,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Box(
-                    modifier = Modifier
-                        .background(primaryColor.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(text = "Earned", fontSize = 12.sp, color = primaryColor)
-                }
-            }
-            Text(
-                text = description,
-                fontSize = 14.sp,
-                color = secondaryColor
-            )
+            Text(title, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = Primary)
+            Text(desc, fontSize = 13.sp, color = TextPrimary)
         }
     }
 }
 
 @Composable
-fun ProfileMenuItem(
-    text: String,
-    icon: ImageVector,
-    onClick: () -> Unit,
-    backgroundColor: Color,
-    contentColor: Color
-) {
-    TextButton(
-        onClick = onClick,
-        colors = ButtonDefaults.textButtonColors(contentColor = contentColor),
-        modifier = Modifier
+fun AccountActionButton(text: String, icon: ImageVector) {
+    Button(
+        onClick = {}, shape = RoundedCornerShape(24.dp), colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.outline,
+            contentColor = MaterialTheme.colorScheme.primary
+        ), modifier = Modifier
             .fillMaxWidth()
-            .background(backgroundColor, RoundedCornerShape(12.dp))
-            .padding(vertical = 16.dp, horizontal = 20.dp)
+            .height(40.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = icon,
-                contentDescription = "$text Icon",
-                tint = contentColor,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(text = text, fontSize = 16.sp, color = contentColor)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(text, fontSize = 15.sp)
         }
     }
 }
