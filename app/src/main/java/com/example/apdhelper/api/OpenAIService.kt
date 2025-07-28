@@ -2,7 +2,6 @@ package com.example.apdhelper.api
 
 import android.util.Log
 import kotlinx.coroutines.delay
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -14,15 +13,14 @@ import retrofit2.http.POST
 object OpenAIService {
 
     private const val BASE_URL = "https://api.openai.com/v1/"
-    private const val API_KEY =""
-           private val retrofit by lazy {
+    private const val API_KEY = ""
+    private val retrofit by lazy {
         val logger = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         val client = OkHttpClient.Builder().addInterceptor { chain ->
-                val request =
-                    chain.request().newBuilder().addHeader("Authorization", "Bearer $API_KEY")
-                        .build()
-                chain.proceed(request)
-            }.addInterceptor(logger).build()
+            val request =
+                chain.request().newBuilder().addHeader("Authorization", "Bearer $API_KEY").build()
+            chain.proceed(request)
+        }.addInterceptor(logger).build()
 
         Retrofit.Builder().baseUrl(BASE_URL).client(client)
             .addConverterFactory(GsonConverterFactory.create()).build()

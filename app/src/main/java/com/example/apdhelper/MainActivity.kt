@@ -9,7 +9,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.apdhelper.bottomnavigationbar.BottomBar
@@ -20,9 +26,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 val LocalGoogleSignInLauncher = compositionLocalOf<() -> Unit> {
     error("Google Sign-In launcher not provided")
@@ -35,14 +38,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             var isBottomBarVisible by remember { mutableStateOf(false) }
+
             val auth = FirebaseAuth.getInstance()
-            val firestore = FirebaseFirestore.getInstance()
-            val context = this
 
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id)).requestEmail().build()
 
-            val googleSignInClient = GoogleSignIn.getClient(context, gso)
+            val googleSignInClient = GoogleSignIn.getClient(this, gso)
 
             val launcher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.StartActivityForResult()
@@ -60,7 +62,8 @@ class MainActivity : ComponentActivity() {
                                     val uid = currentUser.uid
                                     val email = currentUser.email ?: ""
 
-                                    firestore.collection("users").document(uid).get()
+                                    val db = FirebaseFirestore.getInstance()
+                                    db.collection("users").document(uid).get()
                                         .addOnSuccessListener { document ->
                                             if (document.exists()) {
                                                 navController.navigate("home") {
@@ -72,10 +75,10 @@ class MainActivity : ComponentActivity() {
                                                     "name" to (currentUser.displayName
                                                         ?: "Unknown"), "email" to email
                                                 )
-                                                firestore.collection("users").document(uid)
-                                                    .set(newUser).addOnSuccessListener {
+                                                db.collection("users").document(uid).set(newUser)
+                                                    .addOnSuccessListener {
                                                         Toast.makeText(
-                                                            context,
+                                                            this,
                                                             "New user created successfully!",
                                                             Toast.LENGTH_SHORT
                                                         ).show()
@@ -85,7 +88,7 @@ class MainActivity : ComponentActivity() {
                                                         isBottomBarVisible = true
                                                     }.addOnFailureListener { e ->
                                                         Toast.makeText(
-                                                            context,
+                                                            this,
                                                             "Failed to create user: ${e.message}",
                                                             Toast.LENGTH_SHORT
                                                         ).show()
@@ -94,13 +97,12 @@ class MainActivity : ComponentActivity() {
                                         }
                                 }
                             } else {
-                                Toast.makeText(context, "Sign-in failed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Sign-in failed", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this, "Sign-in failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -108,13 +110,6 @@ class MainActivity : ComponentActivity() {
                 launcher.launch(googleSignInClient.signInIntent)
             }) {
                 APDHelperTheme {
-
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid
-                    val db = FirebaseFirestore.getInstance()
-                    val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-
-
                     Scaffold(bottomBar = {
                         if (isBottomBarVisible) {
                             BottomBar(navController = navController)
@@ -132,22 +127,11 @@ class MainActivity : ComponentActivity() {
                                     popUpTo("start") { inclusive = true }
                                 }
                                 isBottomBarVisible = true
-
-                            }
-
-
-                            if (uid != null) {
-                                db.collection("users").document(uid).collection("visits")
-                                    .document(today)
-                                    .set(mapOf("timestamp" to com.google.firebase.Timestamp.now()))
                             }
                         }
-
                     }
-
                 }
             }
         }
     }
 }
-

@@ -1,9 +1,15 @@
-package com.example.apdhelper
+package com.example.apdhelper.ui.screen.auth
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -12,38 +18,35 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.apdhelper.ui.theme.Background
-import com.example.apdhelper.ui.theme.Primary
-import com.example.apdhelper.ui.theme.Secondary
 import com.example.apdhelper.ui.theme.TextPrimary
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-
+import com.example.apdhelper.viewmodel.RegisterViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController) {
+fun RegisterScreen(navController: NavController, viewModel: RegisterViewModel = viewModel()) {
     val context = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var passwordVisible by remember { mutableStateOf(false) }
-    var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var loading by remember { mutableStateOf(false) }
-    val auth = FirebaseAuth.getInstance()
-    val firestore = FirebaseFirestore.getInstance()
     val colors = MaterialTheme.colorScheme
 
     Box(
@@ -57,9 +60,7 @@ fun RegisterScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(
-                    rememberScrollState()
-                )
+                .verticalScroll(rememberScrollState())
         ) {
             Box(
                 modifier = Modifier
@@ -71,7 +72,7 @@ fun RegisterScreen(navController: NavController) {
             ) {
                 Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Heart Outline",
+                    contentDescription = null,
                     tint = colors.secondary,
                     modifier = Modifier.size(50.dp)
                 )
@@ -97,33 +98,34 @@ fun RegisterScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(32.dp))
 
             CustomTextField(
-                value = name,
-                onValueChange = { name = it },
+                value = viewModel.name,
+                onValueChange = { viewModel.name = it },
                 label = "What should we call you?",
                 placeholder = "Your beautiful name"
             )
             Spacer(modifier = Modifier.height(16.dp))
             CustomTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = viewModel.email,
+                onValueChange = { viewModel.email = it },
                 label = "Email Address",
                 placeholder = "your.email@example.com",
                 keyboardType = KeyboardType.Email
             )
             Spacer(modifier = Modifier.height(16.dp))
-            CustomPasswordField(value = password,
-                onValueChange = { password = it },
-                visible = passwordVisible,
-                onVisibilityChange = { passwordVisible = it },
+            CustomPasswordField(
+                value = viewModel.password,
+                onValueChange = { viewModel.password = it },
+                visible = viewModel.passwordVisible,
+                onVisibilityChange = { viewModel.passwordVisible = it },
                 label = "Create a Secure Password",
                 placeholder = "Make it strong and memorable"
             )
             Spacer(modifier = Modifier.height(16.dp))
             CustomPasswordField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                visible = confirmPasswordVisible,
-                onVisibilityChange = { confirmPasswordVisible = it },
+                value = viewModel.confirmPassword,
+                onValueChange = { viewModel.confirmPassword = it },
+                visible = viewModel.confirmPasswordVisible,
+                onVisibilityChange = { viewModel.confirmPasswordVisible = it },
                 label = "Confirm Your Password",
                 placeholder = "Type it once more, please"
             )
@@ -132,50 +134,19 @@ fun RegisterScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    if (name.isBlank() || email.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
-                        Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT)
-                            .show()
-                        return@Button
-                    }
-                    if (password != confirmPassword) {
-                        Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    loading = true
-                    auth.createUserWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            loading = false
-                            if (task.isSuccessful) {
-                                val uid = auth.currentUser?.uid ?: ""
-                                val userMap = hashMapOf("name" to name, "email" to email)
-                                firestore.collection("users").document(uid).set(userMap)
-                                    .addOnSuccessListener {
-                                        navController.navigate("home") {
-                                            popUpTo("start") { inclusive = true }
-                                        }
-                                    }.addOnFailureListener { e ->
-                                        Toast.makeText(
-                                            context,
-                                            "Failed to save user data: ${e.message}",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    "Registration failed: ${task.exception?.message}",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                            }
+                    viewModel.registerUser(context) {
+                        navController.navigate("home") {
+                            popUpTo("start") { inclusive = true }
                         }
+                    }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(12.dp),
-                enabled = !loading
+                enabled = !viewModel.loading
             ) {
-                if (loading) {
+                if (viewModel.loading) {
                     CircularProgressIndicator(
                         color = colors.background,
                         modifier = Modifier.size(24.dp),
@@ -189,9 +160,8 @@ fun RegisterScreen(navController: NavController) {
                     )
                 }
             }
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             TextButton(onClick = {
                 navController.navigate("login")
@@ -203,7 +173,6 @@ fun RegisterScreen(navController: NavController) {
                     color = colors.primary
                 )
             }
-
         }
     }
 }

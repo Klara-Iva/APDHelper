@@ -1,80 +1,60 @@
-package com.example.apdhelper
+package com.example.apdhelper.ui.screen.notes
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.apdhelper.ui.theme.*
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
-import java.util.*
-import androidx.compose.material.icons.filled.*
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.material.icons.Icons
-
+import com.example.apdhelper.ui.theme.themedGradientBrush
+import com.example.apdhelper.viewmodel.AddNewNoteViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddNewNoteScreen(navController: NavController) {
-    val uid = FirebaseAuth.getInstance().currentUser?.uid
-    val db = FirebaseFirestore.getInstance()
-
-    val date = remember {
-        SimpleDateFormat("dd. MM. yyyy. HH:mm:ss", Locale.getDefault()).format(Date())
-    }
-
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
-    var mood by remember { mutableStateOf(5f) }
-    var anxiety by remember { mutableStateOf(5f) }
-    var triggers by remember { mutableStateOf(setOf<String>()) }
-    var tags by remember { mutableStateOf(setOf<String>()) }
-
-    var triggerInput by remember { mutableStateOf("") }
-    var tagInput by remember { mutableStateOf("") }
-
-    val commonTriggers = listOf(
-        "Work stress",
-        "Social situations",
-        "Health concerns",
-        "Financial worry",
-        "Relationship issues",
-        "Sleep problems",
-        "Crowds",
-        "Public speaking",
-        "Decision making",
-        "Change/uncertainty"
-    )
-
-    val suggestedTags = listOf(
-        "Panic attack",
-        "Breakthrough",
-        "Gratitude",
-        "Coping strategy",
-        "Therapy session",
-        "Medication",
-        "Exercise",
-        "Meditation",
-        "Sleep",
-        "Daily reflection"
-    )
+    val viewModel: AddNewNoteViewModel = viewModel()
+    val context = LocalContext.current
 
     Scaffold(topBar = {
         TopAppBar(
@@ -90,19 +70,12 @@ fun AddNewNoteScreen(navController: NavController) {
             },
             actions = {
                 TextButton(onClick = {
-                    if (uid != null) {
-                        val note = Note(
-                            title = title,
-                            content = content,
-                            date = date,
-                            moodLevel = mood.toInt(),
-                            anxietyLevel = anxiety.toInt(),
-                            triggers = triggers.toList(),
-                            tags = tags.toList()
-                        )
-                        db.collection("users").document(uid).collection("notes").add(note)
-                            .addOnSuccessListener { navController.popBackStack() }
-                    }
+
+                    viewModel.saveNote(onSuccess = { navController.popBackStack() },
+                        onError = { message ->
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        })
+
                 }) {
                     Text("Save", color = MaterialTheme.colorScheme.primary, fontSize = 20.sp)
                 }
@@ -118,10 +91,6 @@ fun AddNewNoteScreen(navController: NavController) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            val formattedDate = remember {
-                SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault()).format(Date())
-            }
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -134,7 +103,7 @@ fun AddNewNoteScreen(navController: NavController) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "📅 $formattedDate",
+                    text = "📅 ${viewModel.formattedDate}",
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontSize = 16.sp
                 )
@@ -143,8 +112,8 @@ fun AddNewNoteScreen(navController: NavController) {
             RoundedSection {
                 Text("What's on your mind? ☁️", color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(6.dp))
-                OutlinedTextField(value = title,
-                    onValueChange = { title = it },
+                OutlinedTextField(value = viewModel.title,
+                    onValueChange = { viewModel.title = it },
                     placeholder = { Text("Give your note a title...", fontSize = 12.sp) },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -163,8 +132,8 @@ fun AddNewNoteScreen(navController: NavController) {
                 Text("Share your thoughts 📝", color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(6.dp))
                 OutlinedTextField(
-                    value = content,
-                    onValueChange = { content = it },
+                    value = viewModel.content,
+                    onValueChange = { viewModel.content = it },
                     shape = RoundedCornerShape(12.dp),
                     placeholder = {
                         Text(
@@ -187,11 +156,12 @@ fun AddNewNoteScreen(navController: NavController) {
 
             RoundedSection {
                 Text(
-                    "🙂 Overall Mood: ${mood.toInt()}/10", color = MaterialTheme.colorScheme.primary
+                    "🙂 Overall Mood: ${viewModel.mood.toInt()}/10",
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Slider(
-                    value = mood,
-                    onValueChange = { mood = it },
+                    value = viewModel.mood,
+                    onValueChange = { viewModel.mood = it },
                     valueRange = 1f..10f,
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.primary,
@@ -202,12 +172,12 @@ fun AddNewNoteScreen(navController: NavController) {
 
             RoundedSection {
                 Text(
-                    "😵 Anxiety Level: ${anxiety.toInt()}/10",
+                    "😵 Anxiety Level: ${viewModel.anxiety.toInt()}/10",
                     color = MaterialTheme.colorScheme.primary
                 )
                 Slider(
-                    value = anxiety,
-                    onValueChange = { anxiety = it },
+                    value = viewModel.anxiety,
+                    onValueChange = { viewModel.anxiety = it },
                     valueRange = 1f..10f,
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.primary,
@@ -219,37 +189,28 @@ fun AddNewNoteScreen(navController: NavController) {
             RoundedSection {
                 Text("⚡ What triggered these feelings?", color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(8.dp))
-
                 Row {
-                    OutlinedTextField(value = triggerInput,
-                        onValueChange = { triggerInput = it },
+                    OutlinedTextField(
+                        value = viewModel.triggerInput,
+                        onValueChange = { viewModel.triggerInput = it },
                         placeholder = { Text("Add a custom trigger...", fontSize = 12.sp) },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = {
-                        val input = triggerInput.trim()
-                        if (input.isNotEmpty() && input !in triggers) {
-                            triggers = triggers + input
-                            triggerInput = ""
-                        }
-                    }) {
+                    Button(onClick = { viewModel.addTrigger() }) {
                         Text("Add")
                     }
                 }
 
                 Spacer(Modifier.height(12.dp))
-
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    commonTriggers.forEach { trigger ->
-                        val isSelected = trigger in triggers
-                        AssistChip(onClick = {
-                            triggers = if (isSelected) triggers - trigger else triggers + trigger
-                        },
+                    viewModel.commonTriggers.forEach { trigger ->
+                        val isSelected = trigger in viewModel.triggers
+                        AssistChip(onClick = { viewModel.toggleTrigger(trigger) },
                             label = { Text(trigger) },
                             colors = AssistChipDefaults.assistChipColors(
                                 containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(
-                                    alpha = 0.2f
+                                    0.2f
                                 ) else Color.Transparent,
                                 labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             ),
@@ -265,41 +226,34 @@ fun AddNewNoteScreen(navController: NavController) {
             RoundedSection {
                 Text("🏷 Add tags to organize your notes", color = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(8.dp))
-
                 Row {
-                    OutlinedTextField(value = tagInput,
-                        onValueChange = { tagInput = it },
+                    OutlinedTextField(value = viewModel.tagInput,
+                        onValueChange = { viewModel.tagInput = it },
                         placeholder = { Text("Add a custom tag...", fontSize = 12.sp) },
                         modifier = Modifier.weight(1f)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Button(onClick = {
-                        val input = tagInput.trim()
-                        if (input.isNotEmpty() && input !in tags) {
-                            tags = tags + input
-                            tagInput = ""
-                        }
-                    }) {
+                    Button(onClick = { viewModel.addTag() }) {
                         Text("Add")
                     }
                 }
 
                 Spacer(Modifier.height(12.dp))
-
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    suggestedTags.forEach { tag ->
-                        val isSelected = tag in tags
-                        AssistChip(onClick = {
-                            tags = if (isSelected) tags - tag else tags + tag
-                        }, label = { Text(tag) }, colors = AssistChipDefaults.assistChipColors(
-                            containerColor = if (isSelected) MaterialTheme.colorScheme.secondary.copy(
-                                alpha = 0.2f
-                            ) else Color.Transparent,
-                            labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        ), border = BorderStroke(
-                            width = 1.dp,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                        )
+                    viewModel.suggestedTags.forEach { tag ->
+                        val isSelected = tag in viewModel.tags
+                        AssistChip(onClick = { viewModel.toggleTag(tag) },
+                            label = { Text(tag) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = if (isSelected) MaterialTheme.colorScheme.secondary.copy(
+                                    0.2f
+                                ) else Color.Transparent,
+                                labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+                            )
                         )
                     }
                 }

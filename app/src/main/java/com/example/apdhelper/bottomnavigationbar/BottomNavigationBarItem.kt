@@ -1,9 +1,12 @@
 package com.example.apdhelper.bottomnavigationbar
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material.icons.outlined.Create
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Lightbulb
 import androidx.compose.ui.graphics.vector.ImageVector
-import okhttp3.internal.indexOfControlOrNonAscii
 
 sealed class BottomNavigationItems(
     val route: String, val title: String? = null, val icon: ImageVector? = null
